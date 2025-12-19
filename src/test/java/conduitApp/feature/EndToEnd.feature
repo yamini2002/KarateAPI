@@ -66,7 +66,7 @@ Scenario: end-to-end API test
     """
         {
             "article": {
-                "title": "Conduit App Test",
+                "title": "Conduit App Testing",
                 "description": "Conduit App ",
                 "body": "aszfdcfhgbhkjnmk",
                 "tagList": [
@@ -85,6 +85,8 @@ Scenario: end-to-end API test
     * match response.article.author.username == username
     
     * def SlugId = response.article.slug
+    * def body = response.article.body
+    * def description = response.article.description
     * def createdAt = response.article.createdAt
     * def authorName = response.article.author.username
     
@@ -106,6 +108,33 @@ Scenario: end-to-end API test
     # * match response.article.createdAt == createdAt
     # * match response.article.author.username == authorName
 
+    # Update article
+    Given path 'articles', SlugId
+    Given header Authorization = 'Token ' + token
+    And request 
+    """
+        {
+            "article": {
+                "body": "Testing the App"
+            }
+        }
+    """
+    When method put
+    Then status 200
+
+    * match response.article.slug == SlugId
+    * def created = new Date(response.article.createdAt).getTime()
+    * def updated = new Date(response.article.updatedAt).getTime()
+    * assert updated > created
+
+    # Verify Updated Data
+    Given path 'articles', SlugId
+    Given header Authorization = 'Token ' + token
+    When method get
+    Then status 200
+    * match response.article.body != body
+    * print response.article.body
+    * match response.article.description == description
 
     #Delete 
     Given path 'articles',SlugId
