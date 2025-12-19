@@ -57,15 +57,14 @@ Scenario: Favorite article
 
     * match response.article.favoritesCount == initialFavoritesCount
 
-
-    # Step 6: Get all favorite articles for the author
+    # Step 6: Get all articles for the author
     Given path 'articles'
     # And param favorited = response.article.author.username
     When method get
     Then status 200
     * print response.articles[0]
 
-    # # Step 7: Verify response schema for array of favorite articles
+    # # Step 7: Verify response schema for array of articles
    And match each response.articles ==
 """
     {
@@ -86,6 +85,7 @@ Scenario: Favorite article
       }
     }
     """
+
 
 
     # # Step 8: Verify that slug ID from Step 2 exists in favorite articles
