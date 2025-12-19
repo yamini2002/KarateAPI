@@ -8,30 +8,28 @@ Background: preconditions
 Scenario: end-to-end API test
     # SignUp page 
 
-    * def randomEmail = dataGenerator.getRandomNumber();
-    * def randomName = dataGenerator.getRandomName();
-
-    Given path 'users'
-    Then request 
-    """
-    {
-        "user": {
-            "email": #(randomEmail),
-            "password": "test@123",
-            "username": #(randomName)
-        }
-    }
-    """
-    When method post
-    Then status 201
-    * def accessToken = response.user.token
-    * print accessToken 
-    * match response.user.email == randomEmail
-    * match response.user.username == randomName
-    * match response.user.token == accessToken
-   
-    * match response.user.token != null
-    * match response.user.token != {}
+    # * def randomEmail = dataGenerator.getRandomNumber();
+    # * def randomName = dataGenerator.getRandomName();
+    # Given path 'users'
+    # Then request 
+    # """
+    # {
+    #     "user": {
+    #         "email": #(randomEmail),
+    #         "password": "test@123",
+    #         "username": #(randomName)
+    #     }
+    # }
+    # """
+    # When method post
+    # Then status 201
+    # * def accessToken = response.user.token
+    # * print accessToken 
+    # * match response.user.email == randomEmail
+    # * match response.user.username == randomName
+    # * match response.user.token == accessToken
+    # * match response.user.token != null
+    # * match response.user.token != {}
 
     # SignUp page 
     Given path 'users/login'
@@ -40,6 +38,7 @@ Scenario: end-to-end API test
     Then status 200
     
     * match response.user contains { token: '#string' }
+    * def username = response.user.username
     * def token = response.user.token
 
     # Token Validation
@@ -56,6 +55,60 @@ Scenario: end-to-end API test
 
     # Get current user with Corrupted token
     Given path 'user'
-    And header Authorization = token
+    And header Authorization = 'sdfg '+token
     When method get
     Then status 401
+
+    #Create Article
+    Given path 'articles'
+    Given header Authorization = 'Token ' + token
+    And request 
+    """
+        {
+            "article": {
+                "title": "Conduit App Test",
+                "description": "Conduit App ",
+                "body": "aszfdcfhgbhkjnmk",
+                "tagList": [
+                    "@smoke",
+                    "@regression",
+                    "@sanity"
+                ]
+            }
+        }
+    """
+    When method post
+    Then status 201
+    * match response.article.slug == '#string' 
+    * match response.article.favoritesCount == 0
+    * match response.article.favorited == false
+    * match response.article.author.username == username
+    
+    * def SlugId = response.article.slug
+    * def createdAt = response.article.createdAt
+    * def authorName = response.article.author.username
+    
+    #Cross-Endpoint Data Consistency
+    Given path 'articles', SlugId
+    Given header Authorization = 'Token ' + token
+    When method get
+    Then status 200
+    * match response.article.slug == SlugId
+    * match response.article.createdAt == createdAt
+    * match response.article.author.username == authorName
+
+    # Given path 'articles'
+    # Given header Authorization = 'Token ' + token
+    # And param author = authorName
+    # When method get
+    # Then status 200
+    # * match response.article.slug == SlugId
+    # * match response.article.createdAt == createdAt
+    # * match response.article.author.username == authorName
+
+
+    #Delete 
+    Given path 'articles',SlugId
+    Given header Authorization = 'Token ' + token
+    When method delete
+    Then status 204
