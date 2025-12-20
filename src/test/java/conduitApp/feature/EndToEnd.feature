@@ -240,7 +240,7 @@ Scenario: end-to-end API test
     * def totalComments = response.comments.length
     * match totalComments == 3
 
-# Each comment has id, body, createdAt, author.username
+    # Each comment has id, body, createdAt, author.username
     * match each response.comments ==
     """
         {
@@ -256,10 +256,99 @@ Scenario: end-to-end API test
             }
         }
     """
+    # Unauthorized Access
+    Given path 'articles'
+    And request 
+    """
+        {
+            "article": {
+                "title": "Conduit App Testing",
+                "description": "Conduit App ",
+                "body": "aszfdcfhgbhkjnmk",
+                "tagList": [
+                    "@smoke",
+                    "@regression",
+                    "@sanity"
+                ]
+            }
+        }
+    """
+    When method post
+    Then status 401
 
 
-    #Delete 
+   # Invalid Payload Validation
+   #empty title
+    Given path 'articles'
+    Given header Authorization = 'Token ' + token
+    And request 
+    """
+        {
+            "article": {
+                "title": "",
+                "description": "Conduit App ",
+                "body": "aszfdcfhgbhkjnmk",
+                "tagList": [
+                    "@smoke",
+                    "@regression",
+                    "@sanity"
+                ]
+            }
+        }
+    """
+    When method post
+    Then status 422
+    
+    # missing body.
+    Given path 'articles'
+    Given header Authorization = 'Token ' + token
+    And request 
+    """
+        {
+            "article": {
+                "title": "",
+                "description": "Conduit App ",
+                "body": "",
+                "tagList": [
+                    "@smoke",
+                    "@regression",
+                    "@sanity"
+                ]
+            }
+        }
+    """
+    When method post
+    Then status 422
+
+    #Delete Article
     Given path 'articles',SlugId
     Given header Authorization = 'Token ' + token
     When method delete
     Then status 204
+
+    # Post-Deletion Verification
+    # Get article by slug 
+    Given path 'articles',SlugId
+    Given header Authorization = 'Token ' + token
+    When method get
+    Then status 404
+
+    # - Get comments 
+    Given path 'articles',SlugId,'comments'
+    Given header Authorization = 'Token ' + token
+    When method get
+    Then status 200
+    * print response.comments
+    * match response == {}
+
+    # - Article not listed
+    Given path 'articles'
+    Given header Authorization = 'Token ' + token
+    When method get
+    Then status 200
+    * def articleList = get response.articles[*].slug
+    * match articleList !contains  SlugId
+
+
+# 17. Contract / Schema Validation
+# Validate schemas for user, article, and comment responses.
