@@ -46,7 +46,20 @@ Scenario: end-to-end API test
     Given path 'user'
     And header Authorization = 'Token ' + token
     When method get
-    Then status 200
+    Then status 200 
+
+    #Schema Validation for user
+    * match response.user ==
+    """
+         {
+            "id": "#number",
+            "email": "#string",
+            "username": "#string",
+            "bio": "##string",
+            "image": "##string",
+            "token": "#string"
+        }
+    """
 
     # Get current user with Missing token
     Given path 'user'
@@ -92,13 +105,34 @@ Scenario: end-to-end API test
     
     #Cross-Endpoint Data Consistency
     #Get articles of the global feed
-    # Given path 'articles'
-    # And params {limit: 10 , offset : 0}
-    # When method get
-    # Then status 200
+    Given path 'articles'
+    And params {limit: 10 , offset : 0}
+    When method get
+    Then status 200
+    #Schema Validation for articles
+    * match each response.articles ==
+    """
+        {
+        slug: "#string",
+        title: "#string",
+        description: "##string",
+        body: "#string",
+        tagList: "#[]",
+        createdAt: "#string",
+        updatedAt: "#string",
+        favorited: "#boolean",
+        favoritesCount: "#number",
+        author: {
+            username: "#string",
+            bio: "##string",
+            image: "##string",
+            following: "#boolean"
+        }
+    }
+    """
     # * match response.articles[0].slug == SlugId
-    # * match response.articles.createdAt[0] == createdAt
-    # * match response.articles.author.username[0] == authorName
+    # * match response.articles[0].createdAt == createdAt
+    # * match response.articles[0].author.username == authorName
 
     #Get articles using SlugId
     Given path 'articles', SlugId
@@ -240,6 +274,7 @@ Scenario: end-to-end API test
     * def totalComments = response.comments.length
     * match totalComments == 3
 
+    # Schema Validation for comments
     # Each comment has id, body, createdAt, author.username
     * match each response.comments ==
     """
