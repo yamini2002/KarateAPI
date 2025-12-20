@@ -184,6 +184,80 @@ Scenario: end-to-end API test
     * match response.article.favorited == false
     * match response.article.favoritesCount == 0
 
+    # Add Multiple Comments
+    # 1 Comment
+    Given path 'articles',SlugId,'comments'
+    Given header Authorization = 'Token ' + token
+    And request 
+    """
+    {
+        "comment": {
+            "body": "hi"
+        }
+    }
+    """ 
+    When method POST
+    Then status 200
+    * def comment1 = response.comment.id
+
+    # 2 Comment
+    Given path 'articles',SlugId,'comments'
+    Given header Authorization = 'Token ' + token
+    And request 
+    """
+    {
+        "comment": {
+            "body": "good"
+        }
+    }
+    """ 
+    When method POST
+    Then status 200
+    * def comment2 = response.comment.id
+
+    # 3 Comment
+    Given path 'articles',SlugId,'comments'
+    Given header Authorization = 'Token ' + token
+    And request 
+    """
+    {
+        "comment": {
+            "body": "nice"
+        }
+    }
+    """ 
+    When method POST
+    Then status 200
+    * def comment3 = response.comment.id
+
+    # Validate Comment Ordering
+    Given path 'articles',SlugId,'comments'
+    Given header Authorization = 'Token ' + token
+    When method get
+    Then status 200
+    * print response.comments
+
+    * def totalComments = response.comments.length
+    * match totalComments == 3
+
+# Each comment has id, body, createdAt, author.username
+    * match each response.comments ==
+    """
+        {
+            id: "#number",
+            createdAt: "#string",
+            updatedAt: "#string",
+            body: "#string",
+            author: {
+                username: "#string",
+                bio: "##string",
+                image: "#string",
+                following: "#boolean"
+            }
+        }
+    """
+
+
     #Delete 
     Given path 'articles',SlugId
     Given header Authorization = 'Token ' + token
