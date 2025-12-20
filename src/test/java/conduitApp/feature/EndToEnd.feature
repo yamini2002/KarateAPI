@@ -91,6 +91,16 @@ Scenario: end-to-end API test
     * def authorName = response.article.author.username
     
     #Cross-Endpoint Data Consistency
+    #Get articles of the global feed
+    # Given path 'articles'
+    # And params {limit: 10 , offset : 0}
+    # When method get
+    # Then status 200
+    # * match response.articles[0].slug == SlugId
+    # * match response.articles.createdAt[0] == createdAt
+    # * match response.articles.author.username[0] == authorName
+
+    #Get articles using SlugId
     Given path 'articles', SlugId
     Given header Authorization = 'Token ' + token
     When method get
@@ -99,14 +109,15 @@ Scenario: end-to-end API test
     * match response.article.createdAt == createdAt
     * match response.article.author.username == authorName
 
+    #Get articles using author
     # Given path 'articles'
-    # Given header Authorization = 'Token ' + token
-    # And param author = authorName
+    # And param author = response.article.author.username
     # When method get
     # Then status 200
-    # * match response.article.slug == SlugId
-    # * match response.article.createdAt == createdAt
-    # * match response.article.author.username == authorName
+    # * print response.articles
+    # * match response.articles[0].slug == SlugId
+    # * match response.articles[0].createdAt == createdAt
+    # * match response.articles[0].author.username == authorName
 
     # Update article
     Given path 'articles', SlugId
@@ -121,7 +132,8 @@ Scenario: end-to-end API test
     """
     When method put
     Then status 200
-
+    
+    * def updatedBody = response.article.body
     * match response.article.slug == SlugId
     * def created = new Date(response.article.createdAt).getTime()
     * def updated = new Date(response.article.updatedAt).getTime()
@@ -132,9 +144,45 @@ Scenario: end-to-end API test
     Given header Authorization = 'Token ' + token
     When method get
     Then status 200
-    * match response.article.body != body
+    * match response.article.body == updatedBody
     * print response.article.body
     * match response.article.description == description
+
+    #Favorite Article
+    Given path 'articles',SlugId,'favorite'
+    Given header Authorization = 'Token ' + token
+    And request {}
+    When method post
+    Then status 200
+    * match response.article.favorited == true
+    * match response.article.favoritesCount == 1
+
+    #Again adding it to Favorite Article
+    Given path 'articles',SlugId,'favorite'
+    Given header Authorization = 'Token ' + token
+    And request {}
+    When method post
+    Then status 200
+    * match response.article.favorited == true
+    * match response.article.favoritesCount == 1
+                
+    #Unfavorite the Article
+    Given path 'articles',SlugId,'favorite'
+    Given header Authorization = 'Token ' + token
+    And request {}
+    When method delete
+    Then status 200
+    * match response.article.favorited == false
+    * match response.article.favoritesCount == 0
+
+    #Again Unfavorite the Article
+    Given path 'articles',SlugId,'favorite'
+    Given header Authorization = 'Token ' + token
+    And request {}
+    When method delete
+    Then status 200
+    * match response.article.favorited == false
+    * match response.article.favoritesCount == 0
 
     #Delete 
     Given path 'articles',SlugId
