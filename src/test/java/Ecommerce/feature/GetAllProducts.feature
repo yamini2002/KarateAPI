@@ -55,4 +55,10 @@ Scenario: Get All Products
     Then match response.productId == "#notnull"
     * def productId = response.productId
 
+    Given path 'product/delete-product/' + productId
+    Given header Authorization = token
+    When method delete
+    Then status 200
+    Then match response.message == "Product Deleted Successfully"
+
     
