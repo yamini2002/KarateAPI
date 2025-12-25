@@ -9,3 +9,7 @@ Scenario: To check Login
     Then request {"userEmail":"sandy03@gmail.com","userPassword":"Test@123"}
     When method post
     Then status 200
+
+    * def token = response.token
+    * def userId = response.userId
+    * match response.message == "Login Successfully"
