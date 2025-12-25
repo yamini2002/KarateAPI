@@ -6,16 +6,16 @@ function fn() {
   }
   var config = {
     
-    apiUrl: 'https://conduit-api.bondaracademy.com/api/'
+    // apiUrl: 'https://conduit-api.bondaracademy.com/api/'
   }
-  // if (env == 'dev') {
-  //   config.userEmail = 'yamini@test.com'
-  //   config.userPassword = 'Test@123'
+   if (env == 'dev') {
+    config.userEmail = 'yamini@test.com'
+    config.userPassword = 'Test@123'
 
-  // } else if (env == 'qa') {
-  //   config.userEmail = 'mini03@test.com'
-  //   config.userPassword = 'mini@test'
-  // }
+  } else if (env == 'qa') {
+    config.userEmail = 'mini03@test.com'
+    config.userPassword = 'mini@test'
+  } 
 
   // var accessToken = karate.callSingle('classpath:helpers/Createtoken.feature',config).authToken
   // karate.configure('headers',{Authorization: 'Token '+ accessToken})
